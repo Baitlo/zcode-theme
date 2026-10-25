@@ -1,0 +1,15 @@
+{
+  "name": "zcode-theme",
+  "version": "1.0.0",
+  "description": "ZCode 桌面端排版补丁:Kimi Code 同款字体、紧凑行距、远程工作区自动重连,自动更新后自动重打",
+  "private": false,
+  "type": "commonjs",
+  "scripts": {
+    "patch": "node patch.mjs",
+    "restore": "node patch.mjs --restore"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@electron/asar": "^4.3.0"
+  }
+}

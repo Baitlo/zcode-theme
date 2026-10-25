@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PLIST-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>local.zcode-typo-patch</string>
+  <!-- 通过 open 启动带 bundle 身份的助手 App 执行补丁:
+       launchd 直接跑 node 没有"App 管理"TCC 权限,写入 /Applications 内会被系统断流;
+       open 启动的 .app 以自身签名身份运行,首次会弹一次授权框,允许后永久生效 -->
+  <key>ProgramArguments</key>
+  <array>
+    <string>/usr/bin/open</string>
+    <string>-g</string>
+    <string>-W</string>
+    <string>__PATCH_DIR__/ZCodePatcher.app</string>
+  </array>
+  <!-- ZCode 自动更新会替换 app.asar;变化即触发重打补丁 -->
+  <key>WatchPaths</key>
+  <array>
+    <string>/Applications/ZCode.app/Contents/Resources/app.asar</string>
+  </array>
+  <!-- 登录时也检查一次,覆盖关机期间发生的更新 -->
+  <key>RunAtLoad</key>
+  <true/>
+  <!-- 兜底:每 30 分钟自查一次。已打补丁时走 grep 快速路径秒退,
+       覆盖 WatchPaths 触发后恰逢更新器写入导致全部重试失败的场景 -->
+  <key>StartInterval</key>
+  <integer>1800</integer>
+  <!-- 更新过程会多次写入 asar,做去抖 -->
+  <key>ThrottleInterval</key>
+  <integer>30</integer>
+  <key>StandardOutPath</key>
+  <string>__PATCH_DIR__/launchd.out.log</string>
+  <key>StandardErrorPath</key>
+  <string>__PATCH_DIR__/launchd.err.log</string>
+</dict>
+</plist>

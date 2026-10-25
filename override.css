@@ -1,0 +1,101 @@
+/* zcode-codex-typo: 模型输出正文排版补丁
+   目标:字体对齐 Kimi Code 桌面端(拉丁/数字 = Schibsted Grotesk Variable,
+   代码 = JetBrains Mono Variable,中文回退苹方),行距收紧到 1.5。
+   选择器说明:ZCode 的模型输出容器类名为
+   `size-full text-ui-base leading-[1.75] tracking-wide ...`,
+   该 arbitrary-value 组合在整个渲染包中仅出现于此,用它做锚点,
+   不会影响按钮、侧栏、输入框等其他区域。若未来版本类名变化,
+   补丁会静默失效(不破坏界面),launchd 重打补丁时会按新类名再适配。 */
+
+@font-face {
+  font-family: "ZC Schibsted";
+  src: url("./assets/fonts-codex/SchibstedGrotesk.woff2") format("woff2-variations");
+  font-weight: 400 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "ZC Schibsted";
+  src: url("./assets/fonts-codex/SchibstedGrotesk-Italic.woff2") format("woff2-variations");
+  font-weight: 400 900;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: "ZC JetBrains Mono";
+  src: url("./assets/fonts-codex/JetBrainsMono.woff2") format("woff2-variations");
+  font-weight: 100 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* 模型输出正文容器 */
+[class*="leading-[1.75]"][class*="tracking-wide"] {
+  font-family: "ZC Schibsted", "Helvetica Neue", Arial, -apple-system-body,
+    ui-sans-serif, -apple-system, system-ui, "PingFang SC", "Segoe UI",
+    sans-serif !important;
+  /* 正文字号保持 ZCode 基准 14px(显式锁定,防止继承层级变化);
+     段落/列表文字继承该值,标题、代码块等自带字号的元素不受影响 */
+  font-size: var(--ui-font-size) !important;
+  /* 对齐 Codex 的紧凑排版:行距 1.5、字距 0.01em,
+     显著紧于原版 1.75 + 0.025em */
+  line-height: 1.5 !important;
+  letter-spacing: 0.01em !important;
+}
+
+/* 输出区内的行内代码与代码块用 JetBrains Mono(Kimi Code 同款) */
+[class*="leading-[1.75]"] :where(code, pre, kbd, samp) {
+  font-family: "ZC JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas,
+    monospace;
+}
+
+/* 内部块级元素一并收紧(覆盖 streamdown 组件自带的更宽行距) */
+[class*="leading-[1.75]"] :where(p, li, blockquote, td, th) {
+  line-height: 1.5;
+}
+
+/* ===== 块级间距收紧(段落/标题/列表/引用/代码块/表格) =====
+   间距来源(v3.14.4 实测):
+   - 正文容器同时是 streamdown 根,自带 space-y-4 = 每个块 16px 上距;
+   - 标题类 mt-6 mb-4(上 24px 下 16px),列表 my-3,引用/代码块 my-4;
+   - 表格包裹 my-0,段落本身 margin 0。
+   统一压到:块间 8px,标题上 14px 下 4px,分隔线上下 12px。 */
+[class*="leading-[1.75]"][class*="tracking-wide"] > * + * {
+  margin-top: 8px !important;
+}
+
+[class*="leading-[1.75]"][class*="tracking-wide"] > :is(h1, h2, h3, h4, h5, h6) {
+  margin-top: 14px !important;
+  margin-bottom: 4px !important;
+}
+
+[class*="leading-[1.75]"][class*="tracking-wide"]
+  > :is(ul, ol, blockquote, [data-streamdown="code-block"]) {
+  margin-top: 8px !important;
+  margin-bottom: 8px !important;
+}
+
+[class*="leading-[1.75]"][class*="tracking-wide"] > hr {
+  margin-top: 12px !important;
+  margin-bottom: 12px !important;
+}
+
+/* ===== 工具调用流块间距收紧 =====
+   DOM 结构(每版类名较稳定,带 group/ 命名空间):
+   - 回合容器:  `group/assistant-turn flex w-full flex-col gap-5` (段间距 20px)
+   - 流式块组:  `flex flex-col gap-4` (思考/终端/正文行间距 16px)
+   - 每行:      `<div data-row-id>` (行本身无默认 padding)
+   只在 assistant 回合作用域内覆盖,不影响设置页等其它面板。 */
+
+[class*="group/assistant-turn"] {
+  gap: 10px;
+}
+
+[class*="group/assistant-turn"] [class*="flex flex-col gap-4"] {
+  gap: 8px;
+}
+
+/* 折叠历史块(已工作 N 分)的上 padding 20px → 10px */
+[class*="group/assistant-turn"] [class*="pt-5"] {
+  padding-top: 10px;
+}

@@ -1,0 +1,7 @@
+node_modules/
+ZCodePatcher.app/
+patch.log
+launchd.out.log
+launchd.err.log
+*.asar.orig
+.DS_Store
